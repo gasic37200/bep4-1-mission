@@ -1,7 +1,8 @@
 package com.back.boundedContext.member.in;
 
+import com.back.boundedContext.member.app.MemberFacade;
 import com.back.boundedContext.member.domain.Member;
-import com.back.boundedContext.member.app.MemberService;
+import com.back.boundedContext.member.app.MemberJoinUseCase;
 import com.back.shared.post.event.PostCommentCreatedEvent;
 import com.back.shared.post.event.PostCreatedEvent;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,7 @@ import static org.springframework.transaction.event.TransactionPhase.AFTER_COMMI
 @Component
 @RequiredArgsConstructor
 public class MemberEventListener {
-    private final MemberService memberService;
+    private final MemberFacade memberFacade;
 
     // Transactional(트랜잭션) + EventListener(이벤트 리스너)
     // 스프링 빈에 등록한 메서드 매개변수의 클래스 타입을 등록
@@ -25,7 +26,7 @@ public class MemberEventListener {
     // 새 트렌젝션을 열어서 이벤트를 실행
     @Transactional(propagation = REQUIRES_NEW)
     public void handle(PostCreatedEvent event) {
-        Member member = memberService.findById(event.getPost().getAuthorId()).get();
+        Member member = memberFacade.findById(event.getPost().getAuthorId()).get();
 
         member.increaseActivityScore(3);
     }
@@ -33,7 +34,7 @@ public class MemberEventListener {
     @TransactionalEventListener(phase = AFTER_COMMIT)
     @Transactional(propagation = REQUIRES_NEW)
     public void handle(PostCommentCreatedEvent event) {
-        Member member = memberService.findById(event.getPostComment().getAuthorId()).get();
+        Member member = memberFacade.findById(event.getPostComment().getAuthorId()).get();
 
         member.increaseActivityScore(1);
     }
